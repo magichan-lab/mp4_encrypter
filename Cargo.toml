@@ -4,3 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1"
+iced = { version = "0.14", features = ["image", "tokio", "svg"] }
+crossbeam-channel = "0.5"
+rfd = "0.17.2"
+
+[build-dependencies]
+cc = "1"
+embed-resource = "3"
