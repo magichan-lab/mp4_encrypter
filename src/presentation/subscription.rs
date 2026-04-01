@@ -17,7 +17,7 @@ pub fn subscription(model: &AppModel) -> Subscription<Message> {
         _ => None,
     })];
 
-    if matches!(model.ui.status, AppStatus::Running | AppStatus::Pause) {
+    if matches!(model.ui.status, AppStatus::Inspecting | AppStatus::Running | AppStatus::Pause) {
         subscriptions
             .push(iced::time::every(std::time::Duration::from_millis(100)).map(|_| Message::Tick));
     }

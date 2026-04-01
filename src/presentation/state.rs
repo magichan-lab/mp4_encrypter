@@ -10,6 +10,8 @@ use crate::presentation::dto::DialogState;
 pub enum AppStatus {
     /// 待機中
     Wait,
+    /// 解析中
+    Inspecting,
     /// 実行中
     Running,
     /// 完了
@@ -27,6 +29,7 @@ impl AppStatus {
     pub fn label(self) -> &'static str {
         match self {
             Self::Wait => "待機中",
+            Self::Inspecting => "実行中",
             Self::Running => "処理中",
             Self::Pause => "中断",
             Self::Finished => "完了",
@@ -46,6 +49,7 @@ pub struct UiState {
     pub filename: String,
     pub progress_percent: f32,
     pub status: AppStatus,
+    pub spinner_phase: usize,
     pub dialog: Option<DialogState>,
     pub key_input: String,
 }
@@ -84,6 +88,7 @@ impl AppModel {
                 filename: String::new(),
                 progress_percent: 0.0,
                 status: AppStatus::Wait,
+                spinner_phase: 0,
                 dialog: None,
                 key_input: String::new(),
             },
@@ -103,6 +108,7 @@ impl AppModel {
         if self.ui.status == AppStatus::Wait {
             self.ui.filename.clear();
             self.ui.progress_percent = 0.0;
+            self.ui.spinner_phase = 0;
         }
     }
 
@@ -164,6 +170,7 @@ impl AppModel {
             .unwrap_or_else(|| path.display().to_string());
         self.ui.progress_percent = 0.0;
         self.ui.status = AppStatus::Running;
+        self.ui.spinner_phase = 0;
         self.session.has_key = true;
         self.ui.dialog = None;
         self.session.pending_drop = None;

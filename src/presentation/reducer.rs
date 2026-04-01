@@ -31,13 +31,25 @@ pub fn reduce(model: &mut AppModel, intent: Intent) -> Vec<Effect> {
                 vec![]
             }
         },
-        Intent::Tick => vec![],
+        Intent::Tick => {
+            if model.ui.status == AppStatus::Inspecting {
+                model.ui.spinner_phase = (model.ui.spinner_phase + 1) % 4;
+            }
+            vec![]
+        }
         Intent::FileDropped(path) => match model.ui.status {
             AppStatus::Wait => {
                 if model.ui.key_input.trim().is_empty() {
                     model.show_error("エラー", "キーを入力してください", false);
                     return vec![];
                 }
+                model.ui.filename = path
+                    .file_name()
+                    .map(|value| value.to_string_lossy().to_string())
+                    .unwrap_or_else(|| path.display().to_string());
+                model.ui.progress_percent = 0.0;
+                model.ui.status = AppStatus::Inspecting;
+                model.ui.spinner_phase = 0;
                 let context = if model.session.has_key {
                     InspectContext::WithKey
                 } else {
@@ -45,7 +57,7 @@ pub fn reduce(model: &mut AppModel, intent: Intent) -> Vec<Effect> {
                 };
                 vec![Effect::InspectFile { path, context }]
             }
-            AppStatus::Running => {
+            AppStatus::Running | AppStatus::Inspecting => {
                 model.ui.status = AppStatus::Pause;
                 model.session.pending_drop = Some(path.clone());
                 model.ui.dialog = Some(DialogState::ConfirmSwitch { path });

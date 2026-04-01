@@ -86,6 +86,19 @@ fn main_filename(model: &AppModel) -> Element<'_, Message> {
 /// @param model 画面状態 Model
 /// @return プログレス表示 Element
 fn progress_section(model: &AppModel) -> Element<'_, Message> {
+    if model.ui.status == AppStatus::Inspecting {
+        return container(
+            row![text(spinner_frame(model.ui.spinner_phase)).size(20), text("ファイル解析中...")]
+                .spacing(10)
+                .align_y(Vertical::Center),
+        )
+        .width(Fill)
+        .height(Length::Fixed(28.0))
+        .center_x(Fill)
+        .center_y(Fill)
+        .into();
+    }
+
     let bar: Element<'_, Message> = progress_bar(0.0..=100.0, model.ui.progress_percent)
         .length(Fill)
         .girth(Length::Fixed(28.0))
@@ -106,6 +119,11 @@ fn progress_section(model: &AppModel) -> Element<'_, Message> {
         ]
         .into()
     }
+}
+
+fn spinner_frame(phase: usize) -> &'static str {
+    const FRAMES: [&str; 4] = ["◐", "◓", "◑", "◒"];
+    FRAMES[phase % FRAMES.len()]
 }
 
 /// ダイアログ背景オーバーレイ構築処理
