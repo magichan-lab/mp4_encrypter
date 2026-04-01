@@ -2,13 +2,13 @@
 
 use iced::alignment::{Horizontal, Vertical};
 use iced::widget::{
-    button, column, container, opaque, progress_bar, row, stack, svg, text, text_input,
+    button, column, container, opaque, progress_bar, radio, row, stack, svg, text, text_input,
 };
 use iced::{Border, Color, Element, Fill, Length, Theme};
 
 use crate::presentation::dto::DialogState;
 use crate::presentation::message::Message;
-use crate::presentation::state::{AppModel, AppStatus};
+use crate::presentation::state::{AppModel, AppStatus, KeyInputMode};
 
 /// メインビュー構築処理
 ///
@@ -36,9 +36,34 @@ pub fn view(model: &AppModel) -> Element<'_, Message> {
 }
 
 fn key_input_section(model: &AppModel) -> Element<'_, Message> {
+    let input_title = match model.ui.key_input_mode {
+        KeyInputMode::EncryptionKey => "暗号化キー (16進数・最大32文字)",
+        KeyInputMode::Passphrase => "パスフレーズ (最大20文字)",
+    };
+    let placeholder = match model.ui.key_input_mode {
+        KeyInputMode::EncryptionKey => "encryption_key",
+        KeyInputMode::Passphrase => "passphrase",
+    };
+
     column![
-        text("暗号化キー (16進数・最大32文字)").size(14),
-        text_input("encryption_key", &model.ui.key_input).on_input(Message::KeyInputChanged)
+        row![
+            radio(
+                "暗号化キー",
+                KeyInputMode::EncryptionKey,
+                Some(model.ui.key_input_mode),
+                Message::KeyInputModeSelected
+            ),
+            radio(
+                "パスフレーズ",
+                KeyInputMode::Passphrase,
+                Some(model.ui.key_input_mode),
+                Message::KeyInputModeSelected
+            )
+        ]
+        .spacing(12)
+        .align_y(Vertical::Center),
+        text(input_title).size(14),
+        text_input(placeholder, &model.ui.key_input).on_input(Message::KeyInputChanged)
     ]
     .spacing(8)
     .into()

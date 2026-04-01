@@ -1,6 +1,7 @@
 //! ドメイン値オブジェクト群
 
 use anyhow::{bail, Result};
+use sha2::{Digest, Sha512};
 
 /// 復号キー値オブジェクト
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -9,6 +10,8 @@ pub struct DecryptionKey(String);
 impl DecryptionKey {
     /// 復号キー最大文字数
     pub const MAX_LEN: usize = 32;
+    /// パスフレーズ最大文字数
+    pub const MAX_PASSPHRASE_LEN: usize = 20;
 
     /// 生文字列検証処理
     ///
@@ -47,12 +50,52 @@ impl DecryptionKey {
         Self::parse(padded)
     }
 
+    /// パスフレーズ入力正規化処理
+    ///
+    /// @param value 入力文字列
+    /// @return 利用可能文字のみを残した文字列
+    pub fn sanitize_passphrase_input(value: &str) -> String {
+        value
+            .chars()
+            .filter(|c| Self::is_valid_passphrase_char(*c))
+            .take(Self::MAX_PASSPHRASE_LEN)
+            .collect()
+    }
+
+    /// パスフレーズから暗号化キー生成処理
+    ///
+    /// @param value 入力パスフレーズ
+    /// @return SHA-512先頭16バイトを16進化した暗号化キー
+    pub fn from_passphrase_input(value: &str) -> Result<Self> {
+        let passphrase = Self::sanitize_passphrase_input(value);
+        if passphrase.is_empty() {
+            bail!("パスフレーズが不正です")
+        }
+
+        let digest = Sha512::digest(passphrase.as_bytes());
+        let mut key = String::with_capacity(Self::MAX_LEN);
+        for byte in digest.iter().take(16) {
+            key.push_str(&format!("{byte:02x}"));
+        }
+
+        Self::parse(key)
+    }
+
     /// 16 進文字列妥当性判定処理
     ///
     /// @param value 判定対象文字列
     /// @return 妥当性判定結果
     pub fn is_valid_hex(value: &str) -> bool {
         !value.is_empty() && value.len() % 2 == 0 && value.chars().all(|c| c.is_ascii_hexdigit())
+    }
+
+    /// パスフレーズ許容文字判定処理
+    ///
+    /// @param value 判定対象文字
+    /// @return 判定結果
+    pub fn is_valid_passphrase_char(value: char) -> bool {
+        const EXTRA: &str = "!\"#$%&'()-^\\@[;:],./=~|`{+*}<>?_";
+        value.is_ascii_alphanumeric() || EXTRA.contains(value)
     }
 
     /// FFI 向け文字列参照取得処理

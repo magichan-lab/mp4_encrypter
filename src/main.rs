@@ -155,6 +155,7 @@ fn update(app: &mut AppRuntime, message: Message) -> Task<Message> {
         Message::DialogConfirmed => app.dispatch(Intent::DialogConfirmed),
         Message::DialogDismissed => app.dispatch(Intent::DialogDismissed),
         Message::KeyInputChanged(value) => app.dispatch(Intent::KeyInputChanged(value)),
+        Message::KeyInputModeSelected(mode) => app.dispatch(Intent::KeyInputModeChanged(mode)),
     }
 }
 

@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 use crate::presentation::intent::{InspectContext, InspectionOutcome};
+use crate::presentation::state::KeyInputMode;
 
 /// UI メッセージ
 #[derive(Debug, Clone)]
@@ -21,4 +22,6 @@ pub enum Message {
     DialogDismissed,
     /// キー入力変更
     KeyInputChanged(String),
+    /// キー入力方式切替
+    KeyInputModeSelected(KeyInputMode),
 }

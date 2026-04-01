@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use crate::domain::entities::{DecryptionResult, LaunchRequest};
 use crate::domain::errors::AppError;
 use crate::domain::value_objects::DecryptionKey;
+use crate::presentation::state::KeyInputMode;
 
 /// ファイル検査文脈
 #[derive(Debug, Clone, Copy)]
@@ -57,6 +58,8 @@ pub enum Intent {
     DialogDismissed,
     /// キー入力変更
     KeyInputChanged(String),
+    /// キー入力方式切り替え
+    KeyInputModeChanged(KeyInputMode),
 }
 
 /// reducer 返却副作用命令

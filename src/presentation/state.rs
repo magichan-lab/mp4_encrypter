@@ -5,6 +5,15 @@ use std::path::PathBuf;
 use crate::domain::value_objects::DecryptionKey;
 use crate::presentation::dto::DialogState;
 
+/// キー入力方式
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum KeyInputMode {
+    /// 16進キー入力
+    EncryptionKey,
+    /// パスフレーズ入力
+    Passphrase,
+}
+
 /// アプリ状態表示種別
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AppStatus {
@@ -49,6 +58,7 @@ pub struct UiState {
     pub filename: String,
     pub progress_percent: f32,
     pub status: AppStatus,
+    pub key_input_mode: KeyInputMode,
     pub spinner_phase: usize,
     pub dialog: Option<DialogState>,
     pub key_input: String,
@@ -88,6 +98,7 @@ impl AppModel {
                 filename: String::new(),
                 progress_percent: 0.0,
                 status: AppStatus::Wait,
+                key_input_mode: KeyInputMode::EncryptionKey,
                 spinner_phase: 0,
                 dialog: None,
                 key_input: String::new(),

@@ -4,7 +4,7 @@ use crate::domain::entities::{DecryptionResult, LaunchRequest};
 use crate::domain::value_objects::DecryptionKey;
 use crate::presentation::dto::DialogState;
 use crate::presentation::intent::{Effect, InspectContext, InspectionOutcome, Intent};
-use crate::presentation::state::{AppModel, AppStatus};
+use crate::presentation::state::{AppModel, AppStatus, KeyInputMode};
 
 /// 状態遷移導出処理
 ///
@@ -81,13 +81,25 @@ pub fn reduce(model: &mut AppModel, intent: Intent) -> Vec<Effect> {
                 vec![]
             }
             (_, InspectionOutcome::Plain) => {
-                match DecryptionKey::from_padded_input(&model.ui.key_input) {
+                let key_result = match model.ui.key_input_mode {
+                    KeyInputMode::EncryptionKey => {
+                        DecryptionKey::from_padded_input(&model.ui.key_input)
+                    }
+                    KeyInputMode::Passphrase => {
+                        DecryptionKey::from_passphrase_input(&model.ui.key_input)
+                    }
+                };
+                match key_result {
                     Ok(key) => {
                         let job_id = model.prepare_decryption(&path, &key);
                         vec![Effect::StartDecryption { job_id, path, key }]
                     }
                     Err(_) => {
-                        model.show_error("エラー", "キーが不正です", false);
+                        let message = match model.ui.key_input_mode {
+                            KeyInputMode::EncryptionKey => "キーが不正です",
+                            KeyInputMode::Passphrase => "パスフレーズが不正です",
+                        };
+                        model.show_error("エラー", message, false);
                         vec![]
                     }
                 }
@@ -162,7 +174,15 @@ pub fn reduce(model: &mut AppModel, intent: Intent) -> Vec<Effect> {
             }
         }
         Intent::KeyInputChanged(value) => {
-            model.ui.key_input = DecryptionKey::sanitize_input(&value);
+            model.ui.key_input = match model.ui.key_input_mode {
+                KeyInputMode::EncryptionKey => DecryptionKey::sanitize_input(&value),
+                KeyInputMode::Passphrase => DecryptionKey::sanitize_passphrase_input(&value),
+            };
+            vec![]
+        }
+        Intent::KeyInputModeChanged(mode) => {
+            model.ui.key_input_mode = mode;
+            model.ui.key_input.clear();
             vec![]
         }
     }
