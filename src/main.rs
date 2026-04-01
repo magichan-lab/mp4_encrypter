@@ -192,6 +192,7 @@ fn main() -> iced::Result {
         .subscription(subscription)
         .theme(Theme::Dark)
         .title("MP4 Encrypter")
+        .title(|_app: &AppRuntime| format!("MP4 Encrypter [{}]", env!("CARGO_PKG_VERSION")))
         .window(window::Settings { icon: Some(icon), ..window::Settings::default() })
         .window_size((300.0, 280.0))
         .resizable(false)
